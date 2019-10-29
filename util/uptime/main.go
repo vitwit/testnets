@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"uptime/db"
+	"github.com/vitwit/testnets/util/uptime/src"
 )
 
 func main() {
@@ -17,4 +18,6 @@ func main() {
 
 	fmt.Println("DB_CONN_SUCCESS")
 	defer session.Terminate()
+
+	src.CalUptime()
 }

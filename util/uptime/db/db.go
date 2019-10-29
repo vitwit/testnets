@@ -21,6 +21,7 @@ type (
 	// DB interface defines all the methods accessible by the application
 	DB interface {
 		Terminate()
+
 	}
 
 	// Store will be used to satisfy the DB interface

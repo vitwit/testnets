@@ -1,0 +1,1 @@
+mongo_uri="mongodb://admin-regen2:db1234REGEN@52.54.136.201:27017/bigdipper_db?authSource=admin"
