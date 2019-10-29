@@ -12,8 +12,7 @@ func main() {
 	uri := db.ReadDBConfig()
 	session, err := db.Connect(uri)
 	if err != nil {
-		log.Printf("ERR_DB_CONN: %s", err)
-		return
+		log.Fatalf("ERR_DB_CONN: %s", err)
 	}
 
 	fmt.Println("DB_CONN_SUCCESS")
