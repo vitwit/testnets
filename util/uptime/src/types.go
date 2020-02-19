@@ -23,5 +23,6 @@ type Info struct {
 	TotalPoints        float64 `json:"totalPoints"`
 	Proposal1VoteScore int64   `json:"proposal1VoteScore"`
 	Proposal2VoteScore int64   `json:"proposal2VoteScore"`
-	UptimeRewards      float64   `json:"uptimeRewards"`
+	Proposal3VoteScore int64   `json:"proposal3VoteScore"`
+	Proposal4VoteScore int64   `json:"proposal4VoteScore"`
 }
