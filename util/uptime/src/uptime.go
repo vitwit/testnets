@@ -51,22 +51,44 @@ func New(db db.DB) handler {
 }
 
 func CalculateProposal1VoteScore(address string) int64 {
-	proposal1Voters := viper.Get("elchoco_vote_validators").([]interface{})
+	proposal1Voters := viper.Get("papua_vote_validators").([]interface{})
 
 	for _, obj := range proposal1Voters {
 		if obj.(string) == address {
-			return 100
+			return 50
 		}
 	}
 	return 0
 }
 
 func CalculateProposal2VoteScore(address string) int64 {
-	proposal2Voters := viper.Get("amazonas_vote_validators").([]interface{})
+	proposal2Voters := viper.Get("patagonia_vote_validators").([]interface{})
 
 	for _, obj := range proposal2Voters {
 		if obj.(string) == address {
-			return 100
+			return 50
+		}
+	}
+	return 0
+}
+
+func CalculateProposal3VoteScore(address string) int64 {
+	proposal3Voters := viper.Get("darien_gap_vote_validators").([]interface{})
+
+	for _, obj := range proposal3Voters {
+		if obj.(string) == address {
+			return 50
+		}
+	}
+	return 0
+}
+
+func CalculateProposal4VoteScore(address string) int64 {
+	proposal4Voters := viper.Get("andes_vote_validators").([]interface{})
+
+	for _, obj := range proposal4Voters {
+		if obj.(string) == address {
+			return 50
 		}
 	}
 	return 0
@@ -107,15 +129,17 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 			"_id":          "$validators",
 			"uptime_count": bson.M{"$sum": 1},
 			"upgrade1_block": bson.M{
-				"$cond": []interface{}{
-					bson.M{
-						"$and": []bson.M{
-							bson.M{"$gte": []interface{}{"$height", papuaStartBlock}},
-							bson.M{"$lte": []interface{}{"$height", papuaStartBlock + 150}},
+				"$min":bson.M{
+					"$cond": []interface{}{
+						bson.M{
+							"$and": []bson.M{
+								bson.M{"$gte": []interface{}{"$height", papuaStartBlock}},
+								bson.M{"$lte": []interface{}{"$height", papuaEndBlock}},
+							},
 						},
+						"$height",
+						"null",
 					},
-					"$height",
-					"null",
 				},
 			},
 			"upgrade2_block": bson.M{
@@ -193,13 +217,40 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
-func CalculateUpgradePoints(upgradePointsPerBlock int64, upgradeBlock int64, endBlockHeight int64) int64 {
-	if upgradeBlock == 0 {
-		return 0
+func CalculateUpgrade1Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
+	if valUpgradeBlock - startBlock  == 0 {
+		return 150
+	} else if (valUpgradeBlock - startBlock) > 0 {
+		return 150 - ((valUpgradeBlock - startBlock) * -1)
 	}
-	points := upgradePointsPerBlock * (endBlockHeight - upgradeBlock + 1)
+	return 0
+}
 
-	return points
+func CalculateUpgrade2Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
+	if valUpgradeBlock - startBlock  == 0 {
+		return 150
+	} else if (valUpgradeBlock - startBlock) > 0  && (valUpgradeBlock - startBlock) <=75 {
+		return 150 - ((valUpgradeBlock - startBlock) * -2)
+	}
+	return 0
+}
+
+func CalculateUpgrade3Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
+	if valUpgradeBlock - startBlock  == 0 {
+		return 150
+	} else if (valUpgradeBlock - startBlock) > 0  && (valUpgradeBlock - startBlock) <=50 {
+		return 150 - ((valUpgradeBlock - startBlock) * -3)
+	}
+	return 0
+}
+
+func CalculateUpgrade4Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
+	if valUpgradeBlock - startBlock  == 0 {
+		return 150
+	} else if (valUpgradeBlock - startBlock) > 0  && (valUpgradeBlock - startBlock) <=30 {
+		return 150 - ((valUpgradeBlock - startBlock) * -5)
+	}
+	return 0
 }
 
 func GetCommonValidators(gentxVals, blockVals []string) (results []string) {
@@ -266,15 +317,6 @@ func (h handler) CalculateGenesisPoints(address string) int64 {
 		}
 	}
 
-	//GentxValidators := viper.Get("gentx_validators").([]interface{})
-	//var genxVal []string
-	//
-	//for _, val := range GentxValidators {
-	//	genxVal = append(genxVal, val.(string))
-	//}
-
-	//commonValidators := GetCommonValidators(genxVal, blockValidators)
-
 	for _, val := range blockValidators {
 		if val == address {
 			return 100
@@ -310,23 +352,23 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	//nodeRewards = viper.Get("node_rewards").(int64)
 
 	// Read papua upgrade configs
-	papuaStartBlock = viper.Get("papua_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
-	papuaEndBlock = viper.Get("papua_endblock").(int64) + 1
+	papuaStartBlock = viper.Get("papua_startblock").(int64) //Need to consider votes from next block after upgrade
+	papuaEndBlock = viper.Get("papua_endblock").(int64)
 	papuaPointsPerBlock = viper.Get("papua_reward_points_per_block").(int64)
 
 	// Read patagonia upgrade configs
-	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
-	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64) + 1
+	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
+	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)
 	patagoniaPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	// Read darien-gap upgrade configs
-	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
-	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64) + 1
+	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) //Need to consider votes from next block after upgrade
+	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)
 	dariengapPointsPerBlock = viper.Get("darien_gap_reward_points_per_block").(int64)
 
 	// Read andes upgrade configs
-	andesStartBlock = viper.Get("patagonia_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
-	andesEndBlock = viper.Get("patagonia_endblock").(int64) + 1
+	andesStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
+	andesEndBlock = viper.Get("patagonia_endblock").(int64)
 	andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	var validatorsList []ValidatorInfo //Intializing validators uptime
@@ -351,11 +393,11 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 				OperatorAddr:   obj.Validator_details[0].Operator_address,
 				Moniker:        obj.Validator_details[0].Description.Moniker,
 				UptimeCount:    obj.Uptime_count,
-				Upgrade1Points: CalculateUpgradePoints(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock),
-				Upgrade2Points: CalculateUpgradePoints(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock),
-				Upgrade3Points: CalculateUpgradePoints(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock),
-				Upgrade4Points: CalculateUpgradePoints(andesStartBlock, obj.Upgrade4_block, andesEndBlock),
-				UptimeRewards:  CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
+				Upgrade1Points: CalculateUpgrade1Points(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock),
+				Upgrade2Points: CalculateUpgrade2Points(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock),
+				Upgrade3Points: CalculateUpgrade3Points(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock),
+				Upgrade4Points: CalculateUpgrade4Points(andesStartBlock, obj.Upgrade4_block, andesEndBlock),
+				UptimePoints:  CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
 			},
 		}
 
@@ -367,7 +409,7 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 		maxUptimeRewards := viper.Get("max_uptime_rewards").(int64)
 		uptimePoints := float64(v.Info.UptimeCount*maxUptimeRewards) / (float64(endBlock) - float64(startBlock))
 
-		validatorsList[i].Info.UptimePoints = uptimePoints
+		validatorsList[i].Info.UptimePoints = v.Info.UptimePoints
 
 		//calculate proposal1 vote score
 		proposal1VoteScore := CalculateProposal1VoteScore(validatorsList[i].Info.OperatorAddr)
@@ -375,15 +417,23 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 		//calculate proposal2 vote score
 		proposal2VoteScore := CalculateProposal2VoteScore(validatorsList[i].Info.OperatorAddr)
 
+		proposal3VoteScore := CalculateProposal3VoteScore(validatorsList[i].Info.OperatorAddr)
+
+		proposal4VoteScore := CalculateProposal4VoteScore(validatorsList[i].Info.OperatorAddr)
+
 		validatorsList[i].Info.Proposal1VoteScore = proposal1VoteScore
 		validatorsList[i].Info.Proposal2VoteScore = proposal2VoteScore
+		validatorsList[i].Info.Proposal3VoteScore = proposal3VoteScore
+		validatorsList[i].Info.Proposal4VoteScore = proposal4VoteScore
 
 		genesisPoints := h.CalculateGenesisPoints(validatorsList[i].Info.OperatorAddr)
 		validatorsList[i].Info.GenesisPoints = genesisPoints
 
 		validatorsList[i].Info.TotalPoints = float64(validatorsList[i].Info.Upgrade1Points) +
-			float64(validatorsList[i].Info.Upgrade2Points) + uptimePoints + float64(nodeRewards) +
-			float64(proposal1VoteScore) + float64(proposal2VoteScore) + float64(genesisPoints)
+			float64(validatorsList[i].Info.Upgrade2Points) + float64(validatorsList[i].Info.Upgrade3Points)+
+			float64(validatorsList[i].Info.Upgrade4Points)+ uptimePoints +
+			float64(proposal1VoteScore) + float64(proposal2VoteScore) + float64(proposal3VoteScore) +
+			float64(proposal4VoteScore) + float64(genesisPoints)
 
 	}
 
