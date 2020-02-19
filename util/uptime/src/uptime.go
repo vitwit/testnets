@@ -440,8 +440,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	//Printing Uptime results in tabular view
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 0, ' ', tabwriter.Debug)
 	fmt.Fprintln(w, " Operator Addr \t Moniker\t Uptime Count "+
-		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points \t Uptime Points \t Node Points"+
-		" \t Proposal-1 Points \t Proposal-2 Points \t Genesis Points \t Total points")
+		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points \t Uptime Points "+
+		" \t Proposal-1 Points \t Proposal-2 Points \t Proposal-3 Points \t Proposal-4 Points \t Genesis Points \t Total points")
 
 	for _, data := range validatorsList {
 		var address string = data.Info.OperatorAddr
@@ -455,8 +455,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 			"\t  "+strconv.Itoa(int(data.Info.UptimeCount))+" \t"+fmt.Sprintf("%f", data.Info.UptimePoints)+
 			"\t "+strconv.Itoa(int(data.Info.Upgrade1Points))+" \t"+strconv.Itoa(int(data.Info.Upgrade2Points))+
 			"\t "+strconv.Itoa(int(data.Info.Upgrade3Points))+" \t"+strconv.Itoa(int(data.Info.Upgrade4Points))+
-			"\t"+strconv.Itoa(int(nodeRewards))+"\t"+
 			"\t"+strconv.Itoa(int(data.Info.Proposal1VoteScore))+"\t"+strconv.Itoa(int(data.Info.Proposal2VoteScore))+
+			"\t"+strconv.Itoa(int(data.Info.Proposal3VoteScore))+"\t"+strconv.Itoa(int(data.Info.Proposal4VoteScore))+
 			"\t"+strconv.Itoa(int(data.Info.GenesisPoints))+"\t"+fmt.Sprintf("%f", data.Info.TotalPoints))
 	}
 
@@ -470,8 +470,9 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 	Header := []string{
 		"ValOper Address", "Moniker", "Uptime Count", "Upgrade1 Points",
-		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points", "Uptime Points", "Node points",
-		"Proposal1 Vote Points", "Proposal2 Vote Points", "Genesis Points", "Total Points",
+		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points", "Uptime Points",
+		"Proposal1 Vote Points", "Proposal2 Vote Points","Proposal1 Vote Points", "Proposal2 Vote Points",
+		"Genesis Points", "Total Points",
 	}
 
 	file, err := os.Create("result.csv")
@@ -503,13 +504,15 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		up2Points := strconv.Itoa(int(record.Info.Upgrade2Points))
 		up3Points := strconv.Itoa(int(record.Info.Upgrade3Points))
 		up4Points := strconv.Itoa(int(record.Info.Upgrade4Points))
-		nodePoints := strconv.Itoa(int(nodeRewards))
 		totalPoints := fmt.Sprintf("%f", record.Info.TotalPoints)
 		p1VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
 		p2VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
+		p3VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
+		p4VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
 		genPoints := strconv.Itoa(int(record.Info.GenesisPoints))
 		addrObj := []string{address, record.Info.Moniker, uptimeCount, up1Points,
-			up2Points, up3Points, up4Points, uptimePoints, nodePoints, p1VoteScore, p2VoteScore, genPoints, totalPoints}
+			up2Points, up3Points, up4Points, uptimePoints, p1VoteScore, p2VoteScore,p3VoteScore,
+			p4VoteScore, genPoints, totalPoints}
 		err := writer.Write(addrObj)
 
 		if err != nil {
