@@ -53,36 +53,22 @@ func CalculateProposal1VoteScore(address string) int64 {
 	return 0
 }
 
-func CalculateProposal2VoteScore(address string) int64 {
-	proposal2Voters := viper.Get("patagonia_vote_validators").([]interface{})
-
-	for _, obj := range proposal2Voters {
-		if obj.(string) == address {
-			return 50
-		}
+func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_address string) int64 {
+	query := bson.M{
+		"proposal_id": proposal_id,
+		"voter":       delegator_address,
 	}
-	return 0
-}
 
-func CalculateProposal3VoteScore(address string) int64 {
-	proposal3Voters := viper.Get("darien_gap_vote_validators").([]interface{})
-
-	for _, obj := range proposal3Voters {
-		if obj.(string) == address {
-			return 50
-		}
+	proposal, err := h.db.QueryProposalDetails(query)
+	if err != nil {
+		fmt.Printf("Error while fetching proposal data %v", err)
+		db.HandleError(err)
 	}
-	return 0
-}
 
-func CalculateProposal4VoteScore(address string) int64 {
-	proposal4Voters := viper.Get("andes_vote_validators").([]interface{})
-
-	for _, obj := range proposal4Voters {
-		if obj.(string) == address {
-			return 50
-		}
+	if proposal.Option == "Yes" {
+		return 50
 	}
+
 	return 0
 }
 
@@ -284,7 +270,7 @@ func (h handler) CalculateGenesisPoints(address string) int64 {
 				},
 				bson.M{
 					"$project": bson.M{
-						"description.moniker": 1, "operator_address": 1, "address": 1, "_id": 0,
+						"description.moniker": 1, "operator_address": 1, "address": 1, "delegator_address": 1, "_id": 0,
 					},
 				},
 			},
@@ -381,17 +367,24 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	}
 
 	for _, obj := range results {
+
+		var special_bonus int64 = 0
+		if obj.Validator_details[0].Operator_address == viper.Get("special_bonus_address").(string) {
+			special_bonus = 100
+		}
+
 		valInfo := ValidatorInfo{
 			ValAddress: obj.Validator_details[0].Address,
 			Info: Info{
-				OperatorAddr:   obj.Validator_details[0].Operator_address,
-				Moniker:        obj.Validator_details[0].Description.Moniker,
-				UptimeCount:    obj.Uptime_count,
-				Upgrade1Points: CalculateUpgrade1Points(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock),
-				Upgrade2Points: CalculateUpgrade2Points(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock),
-				Upgrade3Points: CalculateUpgrade3Points(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock),
-				Upgrade4Points: CalculateUpgrade4Points(andesStartBlock, obj.Upgrade4_block, andesEndBlock),
-				UptimePoints:   CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
+				OperatorAddr:     obj.Validator_details[0].Operator_address,
+				Moniker:          obj.Validator_details[0].Description.Moniker,
+				UptimeCount:      obj.Uptime_count,
+				Upgrade1Points:   CalculateUpgrade1Points(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock),
+				Upgrade2Points:   CalculateUpgrade2Points(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock),
+				Upgrade3Points:   CalculateUpgrade3Points(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock) + special_bonus,
+				Upgrade4Points:   CalculateUpgrade4Points(andesStartBlock, obj.Upgrade4_block, andesEndBlock),
+				UptimePoints:     CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
+				DelegatorAddress: obj.Validator_details[0].Delegator_address,
 			},
 		}
 
@@ -405,15 +398,19 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 		validatorsList[i].Info.UptimePoints = v.Info.UptimePoints
 
+		proposal1 := viper.Get("proposal_1_id").(string)
+		proposal2 := viper.Get("proposal_2_id").(string)
+		proposal3 := viper.Get("proposal_3_id").(string)
+		proposal4 := viper.Get("proposal_4_id").(string)
 		//calculate proposal1 vote score
-		proposal1VoteScore := CalculateProposal1VoteScore(validatorsList[i].Info.OperatorAddr)
+		proposal1VoteScore := h.CalculateProposalsVoteScore(proposal1, validatorsList[i].Info.DelegatorAddress)
 
 		//calculate proposal2 vote score
-		proposal2VoteScore := CalculateProposal2VoteScore(validatorsList[i].Info.OperatorAddr)
+		proposal2VoteScore := h.CalculateProposalsVoteScore(proposal2, validatorsList[i].Info.DelegatorAddress)
 
-		proposal3VoteScore := CalculateProposal3VoteScore(validatorsList[i].Info.OperatorAddr)
+		proposal3VoteScore := h.CalculateProposalsVoteScore(proposal3, validatorsList[i].Info.DelegatorAddress)
 
-		proposal4VoteScore := CalculateProposal4VoteScore(validatorsList[i].Info.OperatorAddr)
+		proposal4VoteScore := h.CalculateProposalsVoteScore(proposal4, validatorsList[i].Info.DelegatorAddress)
 
 		validatorsList[i].Info.Proposal1VoteScore = proposal1VoteScore
 		validatorsList[i].Info.Proposal2VoteScore = proposal2VoteScore

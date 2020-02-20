@@ -25,4 +25,5 @@ type Info struct {
 	Proposal2VoteScore int64   `json:"proposal2VoteScore"`
 	Proposal3VoteScore int64   `json:"proposal3VoteScore"`
 	Proposal4VoteScore int64   `json:"proposal4VoteScore"`
+	DelegatorAddress   string  `json:"delegator_address"`
 }

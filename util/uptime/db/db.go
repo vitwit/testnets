@@ -11,6 +11,7 @@ var (
 	DB_NAME, dbErr        = viper.Get("database").(string)
 	BLOCKS_COLLECTION     = "blocks"
 	VALIDATORS_COLLECTION = "validators"
+	PROPOSALS_COLLECTION  = "proposals"
 )
 
 type Blocks struct {
@@ -36,13 +37,20 @@ type ValAggregateResult struct {
 }
 
 type Validator_details struct {
-	Description      Description `json:"description" bson:"description"`
-	Operator_address string      `json:"operator_address" bson:"operator_address"`
-	Address          string      `json:"address" bson:"address"`
+	Description       Description `json:"description" bson:"description"`
+	Operator_address  string      `json:"operator_address" bson:"operator_address"`
+	Address           string      `json:"address" bson:"address"`
+	Delegator_address string      `json:"delegator_address" bson:"delegator_address"`
 }
 
 type Description struct {
 	Moniker string `json:"moniker" bson:"moniker"`
+}
+
+type Proposals struct {
+	Voter       string `json:"voter" bson:"voter"`
+	Proposal_id string `json:"proposal_id" bson:"proposal_id"`
+	Option      string `json:"option" bson:"option"`
 }
 
 // Connect returns a pointer to a MongoDB instance,
@@ -64,11 +72,17 @@ func (db Store) QueryValAggregateData(aggQuery []bson.M) (result []ValAggregateR
 	return result, err
 }
 
+func (db Store) QueryProposalDetails(query bson.M) (proposals Proposals, err error) {
+	err = db.session.DB(DB_NAME).C(PROPOSALS_COLLECTION).Find(query).One(&proposals)
+	return proposals, err
+}
+
 type (
 	// DB interface defines all the methods accessible by the application
 	DB interface {
 		Terminate()
 		QueryValAggregateData(aggQuery []bson.M) ([]ValAggregateResult, error)
+		QueryProposalDetails(query bson.M) (Proposals, error)
 	}
 
 	// Store will be used to satisfy the DB interface
