@@ -65,7 +65,7 @@ func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_addr
 		db.HandleError(err)
 	}
 
-	if proposal.Option == "Yes" {
+	if proposal.Voter != "" {
 		return 50
 	}
 
