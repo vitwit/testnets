@@ -15,13 +15,6 @@ import (
 )
 
 var (
-	//elChocoStartBlock     int64
-	//elChocoEndBlock       int64
-	//elChocoPointsPerBlock int64
-	//
-	//amazonasStartBlock     int64
-	//amazonasEndBlock       int64
-	//amazonasPointsPerBlock int64
 
 	papuaStartBlock     int64
 	papuaEndBlock       int64
@@ -354,22 +347,22 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	// Read papua upgrade configs
 	papuaStartBlock = viper.Get("papua_startblock").(int64) //Need to consider votes from next block after upgrade
 	papuaEndBlock = viper.Get("papua_endblock").(int64)
-	papuaPointsPerBlock = viper.Get("papua_reward_points_per_block").(int64)
+	//papuaPointsPerBlock = viper.Get("papua_reward_points_per_block").(int64)
 
 	// Read patagonia upgrade configs
 	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
 	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)
-	patagoniaPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
+	//patagoniaPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	// Read darien-gap upgrade configs
 	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) //Need to consider votes from next block after upgrade
 	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)
-	dariengapPointsPerBlock = viper.Get("darien_gap_reward_points_per_block").(int64)
+	//dariengapPointsPerBlock = viper.Get("darien_gap_reward_points_per_block").(int64)
 
 	// Read andes upgrade configs
 	andesStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
 	andesEndBlock = viper.Get("patagonia_endblock").(int64)
-	andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
+	//andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	var validatorsList []ValidatorInfo //Intializing validators uptime
 
@@ -406,8 +399,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	//calculating uptime points
 	for i, v := range validatorsList {
-		maxUptimeRewards := viper.Get("max_uptime_rewards").(int64)
-		uptimePoints := float64(v.Info.UptimeCount*maxUptimeRewards) / (float64(endBlock) - float64(startBlock))
+		//maxUptimeRewards := viper.Get("max_uptime_rewards").(int64)
+		//uptimePoints := float64(v.Info.UptimeCount*maxUptimeRewards) / (float64(endBlock) - float64(startBlock))
 
 		validatorsList[i].Info.UptimePoints = v.Info.UptimePoints
 
@@ -431,7 +424,7 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 		validatorsList[i].Info.TotalPoints = float64(validatorsList[i].Info.Upgrade1Points) +
 			float64(validatorsList[i].Info.Upgrade2Points) + float64(validatorsList[i].Info.Upgrade3Points)+
-			float64(validatorsList[i].Info.Upgrade4Points)+ uptimePoints +
+			float64(validatorsList[i].Info.Upgrade4Points)+ v.Info.UptimePoints +
 			float64(proposal1VoteScore) + float64(proposal2VoteScore) + float64(proposal3VoteScore) +
 			float64(proposal4VoteScore) + float64(genesisPoints)
 
