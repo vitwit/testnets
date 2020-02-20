@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/vitwit/testnets/util/uptime/db"
 	"gopkg.in/mgo.v2/bson"
+	"github.com/kataras/golog"
 )
 
 var (
@@ -59,11 +60,7 @@ func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_addr
 		"voter":       delegator_address,
 	}
 
-	proposal, err := h.db.QueryProposalDetails(query)
-	if err != nil {
-		fmt.Printf("Error while fetching proposal data %v", err)
-		db.HandleError(err)
-	}
+	proposal, _ := h.db.QueryProposalDetails(query)
 
 	if proposal.Voter != "" {
 		return 50
@@ -86,7 +83,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 					"height": bson.M{"$gte": startBlock},
 				},
 				bson.M{
-					"height": bson.M{"$lte": startBlock},
+					"height": bson.M{"$lte": endBlock},
 				},
 			},
 		},
@@ -180,7 +177,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 				},
 				bson.M{
 					"$project": bson.M{
-						"description.moniker": 1, "operator_address": 1, "address": 1, "_id": 0,
+						"description.moniker": 1, "operator_address": 1,"delegator_address":1, "address": 1, "_id": 0,
 					},
 				},
 			},
@@ -332,23 +329,23 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	//nodeRewards = viper.Get("node_rewards").(int64)
 
 	// Read papua upgrade configs
-	papuaStartBlock = viper.Get("papua_startblock").(int64) //Need to consider votes from next block after upgrade
-	papuaEndBlock = viper.Get("papua_endblock").(int64)
+	papuaStartBlock = viper.Get("papua_startblock").(int64)+1 //Need to consider votes from next block after upgrade
+	papuaEndBlock = viper.Get("papua_endblock").(int64)+1
 	//papuaPointsPerBlock = viper.Get("papua_reward_points_per_block").(int64)
 
 	// Read patagonia upgrade configs
-	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
-	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)
+	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64)+1 //Need to consider votes from next block after upgrade
+	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)+1
 	//patagoniaPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	// Read darien-gap upgrade configs
-	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) //Need to consider votes from next block after upgrade
-	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)
+	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64)+1 //Need to consider votes from next block after upgrade
+	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)+1
 	//dariengapPointsPerBlock = viper.Get("darien_gap_reward_points_per_block").(int64)
 
 	// Read andes upgrade configs
-	andesStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
-	andesEndBlock = viper.Get("patagonia_endblock").(int64)
+	andesStartBlock = viper.Get("andes_startblock").(int64)+1 //Need to consider votes from next block after upgrade
+	andesEndBlock = viper.Get("andes_endblock").(int64)+1
 	//andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	var validatorsList []ValidatorInfo //Intializing validators uptime
@@ -360,6 +357,9 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 		andesStartBlock, andesEndBlock)
 
 	results, err := h.db.QueryValAggregateData(upgrade1_aggQuery)
+	if err != nil {
+		golog.Error("Error while fetching the data..", err)
+	}
 
 	if err != nil {
 		fmt.Printf("Error while fetching validator data %v", err)
@@ -462,7 +462,7 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 	Header := []string{
 		"ValOper Address", "Moniker", "Uptime Count", "Upgrade1 Points",
 		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points", "Uptime Points",
-		"Proposal1 Vote Points", "Proposal2 Vote Points", "Proposal1 Vote Points", "Proposal2 Vote Points",
+		"Proposal1 Vote Points", "Proposal2 Vote Points", "Proposal3 Vote Points", "Proposal4 Vote Points",
 		"Genesis Points", "Total Points",
 	}
 
