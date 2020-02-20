@@ -15,7 +15,6 @@ import (
 )
 
 var (
-
 	papuaStartBlock     int64
 	papuaEndBlock       int64
 	papuaPointsPerBlock int64
@@ -122,7 +121,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 			"_id":          "$validators",
 			"uptime_count": bson.M{"$sum": 1},
 			"upgrade1_block": bson.M{
-				"$min":bson.M{
+				"$min": bson.M{
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
@@ -211,7 +210,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
 func CalculateUpgrade1Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock - startBlock  == 0 {
+	if valUpgradeBlock-startBlock == 0 {
 		return 150
 	} else if (valUpgradeBlock - startBlock) > 0 {
 		return 150 - ((valUpgradeBlock - startBlock) * -1)
@@ -220,27 +219,27 @@ func CalculateUpgrade1Points(startBlock int64, valUpgradeBlock int64, endBlockHe
 }
 
 func CalculateUpgrade2Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock - startBlock  == 0 {
+	if valUpgradeBlock-startBlock == 0 {
 		return 150
-	} else if (valUpgradeBlock - startBlock) > 0  && (valUpgradeBlock - startBlock) <=75 {
+	} else if (valUpgradeBlock-startBlock) > 0 && (valUpgradeBlock-startBlock) <= 75 {
 		return 150 - ((valUpgradeBlock - startBlock) * -2)
 	}
 	return 0
 }
 
 func CalculateUpgrade3Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock - startBlock  == 0 {
+	if valUpgradeBlock-startBlock == 0 {
 		return 150
-	} else if (valUpgradeBlock - startBlock) > 0  && (valUpgradeBlock - startBlock) <=50 {
+	} else if (valUpgradeBlock-startBlock) > 0 && (valUpgradeBlock-startBlock) <= 50 {
 		return 150 - ((valUpgradeBlock - startBlock) * -3)
 	}
 	return 0
 }
 
 func CalculateUpgrade4Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock - startBlock  == 0 {
+	if valUpgradeBlock-startBlock == 0 {
 		return 150
-	} else if (valUpgradeBlock - startBlock) > 0  && (valUpgradeBlock - startBlock) <=30 {
+	} else if (valUpgradeBlock-startBlock) > 0 && (valUpgradeBlock-startBlock) <= 30 {
 		return 150 - ((valUpgradeBlock - startBlock) * -5)
 	}
 	return 0
@@ -330,6 +329,8 @@ func CalculateUptimeRewards(uptime_count int64, start_block int64, end_block int
 		return 200
 	} else if uptimePerc > 90 && uptimePerc < 100 {
 		// have to write
+		value := float64((uptimePerc - 90) / 100)
+		return value
 	} else if uptimePerc == 90 {
 		return 1
 	} else {
@@ -390,7 +391,7 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 				Upgrade2Points: CalculateUpgrade2Points(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock),
 				Upgrade3Points: CalculateUpgrade3Points(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock),
 				Upgrade4Points: CalculateUpgrade4Points(andesStartBlock, obj.Upgrade4_block, andesEndBlock),
-				UptimePoints:  CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
+				UptimePoints:   CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
 			},
 		}
 
@@ -423,8 +424,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 		validatorsList[i].Info.GenesisPoints = genesisPoints
 
 		validatorsList[i].Info.TotalPoints = float64(validatorsList[i].Info.Upgrade1Points) +
-			float64(validatorsList[i].Info.Upgrade2Points) + float64(validatorsList[i].Info.Upgrade3Points)+
-			float64(validatorsList[i].Info.Upgrade4Points)+ v.Info.UptimePoints +
+			float64(validatorsList[i].Info.Upgrade2Points) + float64(validatorsList[i].Info.Upgrade3Points) +
+			float64(validatorsList[i].Info.Upgrade4Points) + v.Info.UptimePoints +
 			float64(proposal1VoteScore) + float64(proposal2VoteScore) + float64(proposal3VoteScore) +
 			float64(proposal4VoteScore) + float64(genesisPoints)
 
@@ -464,7 +465,7 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 	Header := []string{
 		"ValOper Address", "Moniker", "Uptime Count", "Upgrade1 Points",
 		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points", "Uptime Points",
-		"Proposal1 Vote Points", "Proposal2 Vote Points","Proposal1 Vote Points", "Proposal2 Vote Points",
+		"Proposal1 Vote Points", "Proposal2 Vote Points", "Proposal1 Vote Points", "Proposal2 Vote Points",
 		"Genesis Points", "Total Points",
 	}
 
@@ -504,7 +505,7 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		p4VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
 		genPoints := strconv.Itoa(int(record.Info.GenesisPoints))
 		addrObj := []string{address, record.Info.Moniker, uptimeCount, up1Points,
-			up2Points, up3Points, up4Points, uptimePoints, p1VoteScore, p2VoteScore,p3VoteScore,
+			up2Points, up3Points, up4Points, uptimePoints, p1VoteScore, p2VoteScore, p3VoteScore,
 			p4VoteScore, genPoints, totalPoints}
 		err := writer.Write(addrObj)
 
