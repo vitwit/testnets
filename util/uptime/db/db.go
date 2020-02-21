@@ -32,8 +32,8 @@ type ValAggregateResult struct {
 	Uptime_count      int64               `json:"uptime_count" bson:"uptime_count"`
 	Upgrade1_block    int64               `json:"upgrade1_block" bson:"upgrade1_block"`
 	Upgrade2_block    int64               `json:"upgrade2_block" bson:"upgrade2_block"`
-	Upgrade3_block    int64               `json:"upgrade_3_block" bson:"upgrade_3_block"`
-	Upgrade4_block    int64               `json:"upgrade_4_block" bson:"upgrade_4_block"`
+	Upgrade3_block    int64               `json:"upgrade3_block" bson:"upgrade3_block"`
+	Upgrade4_block    int64               `json:"upgrade4_block" bson:"upgrade4_block"`
 	Validator_details []Validator_details `json:"validator_details" bson:"validator_details"`
 }
 

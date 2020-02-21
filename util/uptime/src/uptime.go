@@ -2,6 +2,7 @@ package src
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -188,7 +189,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 
 	aggQuery = append(aggQuery, lookUpQuery)
 
-	fmt.Println("query:", aggQuery)
+	res2B, _ := json.Marshal(aggQuery)
+	fmt.Println(string(res2B))
 
 	return aggQuery
 }
@@ -196,17 +198,22 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
 func CalculateUpgradePoints(startBlock int64, valUpgradeBlock int64, endBlockHeight int64, totalScore int64, missedDeductionFactor int64) int64 {
+	var rewards int64 = 0
+
 	if valUpgradeBlock == 0 {
-		return 0
+		fmt.Println("valUpgradeBlock-----", valUpgradeBlock, missedDeductionFactor)
+		return rewards
 	}
 
 	if valUpgradeBlock == startBlock {
-		return totalScore
+		rewards = totalScore
 	} else if (endBlockHeight - valUpgradeBlock) > 0 {
-		return totalScore - ((valUpgradeBlock - startBlock) * missedDeductionFactor) // each missed block costs 1 point deduction
+		rewards = totalScore - ((valUpgradeBlock - startBlock) * missedDeductionFactor) // each missed block costs 1 point deduction
 	}
 
-	return 0
+	fmt.Println(missedDeductionFactor, valUpgradeBlock, rewards)
+
+	return rewards
 }
 
 func GetCommonValidators(gentxVals, blockVals []string) (results []string) {
@@ -360,8 +367,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 				OperatorAddr:     obj.Validator_details[0].Operator_address,
 				Moniker:          obj.Validator_details[0].Description.Moniker,
 				UptimeCount:      obj.Uptime_count,
-				Upgrade1Points:   CalculateUpgradePoints(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock, 150, 1),
-				Upgrade2Points:   CalculateUpgradePoints(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock, 150, 2),
+				Upgrade1Points:   CalculateUpgradePoints(patagoniaStartBlock, obj.Upgrade1_block, patagoniaEndBlock, 150, 1),
+				Upgrade2Points:   CalculateUpgradePoints(papuaStartBlock, obj.Upgrade2_block, papuaEndBlock, 150, 2),
 				Upgrade3Points:   CalculateUpgradePoints(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock, 150, 3) + specialBonus,
 				Upgrade4Points:   CalculateUpgradePoints(andesStartBlock, obj.Upgrade4_block, andesEndBlock, 150, 5),
 				UptimePoints:     CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
