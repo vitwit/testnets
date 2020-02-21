@@ -2,7 +2,6 @@ package src
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -52,7 +51,7 @@ func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_addr
 	url := viper.Get("lcd").(string) + proposal_id + "/votes"
 	resp, err := http.Get(url)
 	if err != nil {
-
+		fmt.Println("Error while getting proposal response ", err)
 	}
 
 	var proposalInfo Proposal
