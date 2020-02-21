@@ -46,9 +46,9 @@ func New(db db.DB) handler {
 	return handler{db}
 }
 
-func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_address string) int64 {
+func (h *handler) CalculateProposalsVoteScore(proposalId string, delegator_address string) int64 {
+	url := viper.Get("lcd").(string) + "/gov/proposals/" + proposalId + "/votes"
 
-	url := viper.Get("lcd").(string) + proposal_id + "/votes"
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println("Error while getting proposal response ", err)
@@ -67,6 +67,23 @@ func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_addr
 		}
 	}
 	return 0
+}
+
+func GetProposalsVotes(proposalId string) Proposal {
+	url := viper.Get("lcd").(string) + "/gov/proposals/" + proposalId + "/votes"
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Error while getting proposal response ", err)
+	}
+
+	var proposalInfo Proposal
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error while reading resp body ", err)
+	}
+	_ = json.Unmarshal(body, &proposalInfo)
+
+	return proposalInfo
 }
 
 func GenerateAggregateQuery(startBlock int64, endBlock int64,
@@ -301,7 +318,7 @@ func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64)
 
 	if uptimePerc > 90 {
 		rewards := (uptimePerc-90)*20 // each percentage of uptime carries 20 points
-		fmt.Println("uptime rewards: ", uptimePerc, rewards)
+		fmt.Println("uptime rewards: ", uptimeCount, totalBlocks, uptimePerc, rewards)
 		return rewards
 	}
 
@@ -335,6 +352,16 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	//andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
+	proposal1 := viper.Get("proposal_1_id").(string)
+	proposal2 := viper.Get("proposal_2_id").(string)
+	proposal3 := viper.Get("proposal_3_id").(string)
+	proposal4 := viper.Get("proposal_4_id").(string)
+
+	proposal1Votes := GetProposalsVotes(proposal1)
+	proposal2Votes := GetProposalsVotes(proposal2)
+	proposal3Votes := GetProposalsVotes(proposal3)
+	proposal4Votes := GetProposalsVotes(proposal4)
+
 	var validatorsList []ValidatorInfo //Intializing validators uptime
 
 	fmt.Println("Fetching blocks from:", startBlock, ", to:", endBlock)
@@ -356,7 +383,6 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	}
 
 	for _, obj := range results {
-
 		var specialBonus int64 = 0
 		if obj.Validator_details[0].Operator_address == viper.Get("special_bonus_address").(string) {
 			specialBonus = 100
@@ -387,43 +413,43 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 		validatorsList[i].Info.UptimePoints = v.Info.UptimePoints
 
-		proposal1 := viper.Get("proposal_1_id").(string)
-		proposal2 := viper.Get("proposal_2_id").(string)
-		proposal3 := viper.Get("proposal_3_id").(string)
-		proposal4 := viper.Get("proposal_4_id").(string)
 		//calculate proposal1 vote score
-		proposal1VoteScore := h.CalculateProposalsVoteScore(proposal1, validatorsList[i].Info.DelegatorAddress)
+		for _, vote := range proposal1Votes {
+			if vote.Voter == validatorsList[i].Info.DelegatorAddress {
+				validatorsList[i].Info.Proposal1VoteScore = 50
+			}
+		}
 
 		//calculate proposal2 vote score
-		proposal2VoteScore := h.CalculateProposalsVoteScore(proposal2, validatorsList[i].Info.DelegatorAddress)
+		for _, vote := range proposal2Votes {
+			if vote.Voter == validatorsList[i].Info.DelegatorAddress {
+				validatorsList[i].Info.Proposal2VoteScore = 50
+			}
+		}
 
 		//calculate proposal3 vote score
-		proposal3VoteScore := h.CalculateProposalsVoteScore(proposal3, validatorsList[i].Info.DelegatorAddress)
+		for _, vote := range proposal3Votes {
+			if vote.Voter == validatorsList[i].Info.DelegatorAddress {
+				validatorsList[i].Info.Proposal3VoteScore = 50
+			}
+		}
 
 		//calculate proposal4 vote score
-		proposal4VoteScore := h.CalculateProposalsVoteScore(proposal4, validatorsList[i].Info.DelegatorAddress)
-
-		validatorsList[i].Info.Proposal1VoteScore = proposal1VoteScore
-		validatorsList[i].Info.Proposal2VoteScore = proposal2VoteScore
-		validatorsList[i].Info.Proposal3VoteScore = proposal3VoteScore
-		validatorsList[i].Info.Proposal4VoteScore = proposal4VoteScore
+		for _, vote := range proposal4Votes {
+			if vote.Voter == validatorsList[i].Info.DelegatorAddress {
+				validatorsList[i].Info.Proposal4VoteScore = 50
+			}
+		}
 
 		genesisPoints := h.CalculateGenesisPoints(validatorsList[i].Info.OperatorAddr)
 		validatorsList[i].Info.GenesisPoints = genesisPoints
-
-		validatorsList[i].Info.TotalPoints = float64(validatorsList[i].Info.Upgrade1Points) +
-			float64(validatorsList[i].Info.Upgrade2Points) + float64(validatorsList[i].Info.Upgrade3Points) +
-			float64(validatorsList[i].Info.Upgrade4Points) + v.Info.UptimePoints +
-			float64(proposal1VoteScore) + float64(proposal2VoteScore) + float64(proposal3VoteScore) +
-			float64(proposal4VoteScore) + float64(genesisPoints)
-
 	}
 
 	//Printing Uptime results in tabular view
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 0, ' ', tabwriter.Debug)
 	fmt.Fprintln(w, " Operator Addr \t Moniker\t Uptime Count \t Uptime Points "+
 		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points "+
-		" \t Proposal-1 Points \t Proposal-2 Points \t Proposal-3 Points \t Proposal-4 Points \t Genesis Points \t Total points")
+		" \t Proposal-1 Points \t Proposal-2 Points \t Proposal-3 Points \t Proposal-4 Points \t Genesis Points")
 
 	for _, data := range validatorsList {
 		var address string = data.Info.OperatorAddr
@@ -439,7 +465,7 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 			"\t "+strconv.Itoa(int(data.Info.Upgrade3Points))+" \t"+strconv.Itoa(int(data.Info.Upgrade4Points))+
 			"\t"+strconv.Itoa(int(data.Info.Proposal1VoteScore))+"\t"+strconv.Itoa(int(data.Info.Proposal2VoteScore))+
 			"\t"+strconv.Itoa(int(data.Info.Proposal3VoteScore))+"\t"+strconv.Itoa(int(data.Info.Proposal4VoteScore))+
-			"\t"+strconv.Itoa(int(data.Info.GenesisPoints))+"\t"+fmt.Sprintf("%f", data.Info.TotalPoints))
+			"\t"+strconv.Itoa(int(data.Info.GenesisPoints)))
 	}
 
 	w.Flush()
@@ -454,7 +480,7 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		"ValOper Address", "Moniker", "Uptime Count", "Uptime Points", "Upgrade1 Points",
 		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points",
 		"Proposal1 Vote Points", "Proposal2 Vote Points", "Proposal3 Vote Points", "Proposal4 Vote Points",
-		"Genesis Points", "Total Points",
+		"Genesis Points",
 	}
 
 	file, err := os.Create("result.csv")
@@ -486,7 +512,6 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		up2Points := strconv.Itoa(int(record.Info.Upgrade2Points))
 		up3Points := strconv.Itoa(int(record.Info.Upgrade3Points))
 		up4Points := strconv.Itoa(int(record.Info.Upgrade4Points))
-		totalPoints := fmt.Sprintf("%f", record.Info.TotalPoints)
 		p1VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
 		p2VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
 		p3VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
@@ -494,7 +519,7 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		genPoints := strconv.Itoa(int(record.Info.GenesisPoints))
 		addrObj := []string{address, record.Info.Moniker, uptimeCount, uptimePoints, up1Points,
 			up2Points, up3Points, up4Points, p1VoteScore, p2VoteScore, p3VoteScore,
-			p4VoteScore, genPoints, totalPoints}
+			p4VoteScore, genPoints}
 		err := writer.Write(addrObj)
 
 		if err != nil {
