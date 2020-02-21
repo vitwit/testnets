@@ -5,13 +5,13 @@ password = ""
 source = ""
 failFast = true
 
-# Papua upgrade config
-papua_startblock = 32193
-papua_endblock = 32343
-
 # Patagonia upgrade config
-patagonia_startblock = 90676
-patagonia_endblock = 90751
+patagonia_startblock = 32193
+patagonia_endblock = 32343
+
+# Papua upgrade config
+papua_startblock = 90676
+papua_endblock = 90751
 
 # Darien_gap_startblock
 darien_gap_startblock = 214395

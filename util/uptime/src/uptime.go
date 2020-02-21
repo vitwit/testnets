@@ -59,9 +59,10 @@ func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_addr
 }
 
 func GenerateAggregateQuery(startBlock int64, endBlock int64,
-	papuaStartBlock int64, papuaEndBlock int64, patagoniaStartBlock int64, patagoniaEndBlock int64,
-	dariengapStartBlock int64, dariengapEndBlock int64, andesStartBlock int64, andesEndBlock int64) []bson.M {
-
+	patagoniaStartBlock int64, patagoniaEndBlock int64,
+	papuaStartBlock int64, papuaEndBlock int64,
+	dariengapStartBlock int64, dariengapEndBlock int64,
+	andesStartBlock int64, andesEndBlock int64) []bson.M {
 	aggQuery := []bson.M{}
 
 	//Query for filtering blocks in between given start block and end block
@@ -97,8 +98,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
-								bson.M{"$gte": []interface{}{"$height", papuaStartBlock}},
-								bson.M{"$lte": []interface{}{"$height", papuaEndBlock}},
+								bson.M{"$gte": []interface{}{"$height", patagoniaStartBlock}},
+								bson.M{"$lte": []interface{}{"$height", patagoniaEndBlock}},
 							},
 						},
 						"$height",
@@ -111,8 +112,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
-								bson.M{"$gte": []interface{}{"$height", patagoniaStartBlock}},
-								bson.M{"$lte": []interface{}{"$height", patagoniaEndBlock}},
+								bson.M{"$gte": []interface{}{"$height", papuaStartBlock}},
+								bson.M{"$lte": []interface{}{"$height", papuaEndBlock}},
 							},
 						},
 						"$height",
@@ -175,6 +176,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 	}
 
 	aggQuery = append(aggQuery, lookUpQuery)
+
+	fmt.Println("query:", quaggQuery)
 
 	return aggQuery
 }
@@ -280,7 +283,7 @@ func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64)
 	uptimePerc := float64(uptimeCount) / float64(totalBlocks) * 100
 
 	if uptimePerc > 90 {
-		return float64((uptimePerc - 90) * 10 * 200)/100
+		return float64((uptimePerc-90)*10*200) / 100
 	}
 
 	return 0
@@ -315,8 +318,10 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	fmt.Println("Fetching blocks from:", startBlock, ", to:", endBlock)
 
-	upgrade1AggQuery := GenerateAggregateQuery(startBlock, endBlock, papuaStartBlock,
-		papuaEndBlock, patagoniaStartBlock, patagoniaEndBlock, dariengapStartBlock, dariengapEndBlock,
+	upgrade1AggQuery := GenerateAggregateQuery(startBlock, endBlock,
+		patagoniaStartBlock, patagoniaEndBlock,
+		papuaStartBlock, papuaEndBlock,
+		dariengapStartBlock, dariengapEndBlock,
 		andesStartBlock, andesEndBlock)
 
 	results, err := h.db.QueryValAggregateData(upgrade1AggQuery)
