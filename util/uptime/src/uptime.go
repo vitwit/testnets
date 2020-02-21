@@ -2,6 +2,7 @@ package src
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -177,7 +178,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 
 	aggQuery = append(aggQuery, lookUpQuery)
 
-	fmt.Println("query:", aggQuery)
+	res2B, _ := json.Marshal(aggQuery)
+	fmt.Println(string(res2B))
 
 	return aggQuery
 }
