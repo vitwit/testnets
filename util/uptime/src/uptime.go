@@ -423,8 +423,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 // ExportToCsv - Export data to CSV file
 func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 	Header := []string{
-		"ValOper Address", "Moniker", "Uptime Count", "Upgrade1 Points",
-		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points", "Uptime Points",
+		"ValOper Address", "Moniker", "Uptime Count", "Uptime Points", "Upgrade1 Points",
+		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points",
 		"Proposal1 Vote Points", "Proposal2 Vote Points", "Proposal3 Vote Points", "Proposal4 Vote Points",
 		"Genesis Points", "Total Points",
 	}
@@ -464,8 +464,8 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		p3VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
 		p4VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
 		genPoints := strconv.Itoa(int(record.Info.GenesisPoints))
-		addrObj := []string{address, record.Info.Moniker, uptimeCount, up1Points,
-			up2Points, up3Points, up4Points, uptimePoints, p1VoteScore, p2VoteScore, p3VoteScore,
+		addrObj := []string{address, record.Info.Moniker, uptimeCount, uptimePoints, up1Points,
+			up2Points, up3Points, up4Points, p1VoteScore, p2VoteScore, p3VoteScore,
 			p4VoteScore, genPoints, totalPoints}
 		err := writer.Write(addrObj)
 
