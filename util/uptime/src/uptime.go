@@ -415,6 +415,7 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 		//calculate proposal1 vote score
 		for _, vote := range proposal1Votes {
+			fmt.Println("vote.Voter:", vote.Voter, validatorsList[i].Info.DelegatorAddress)
 			if vote.Voter == validatorsList[i].Info.DelegatorAddress {
 				validatorsList[i].Info.Proposal1VoteScore = 50
 			}
