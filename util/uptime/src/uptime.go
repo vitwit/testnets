@@ -187,17 +187,21 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
 func CalculateUpgradePoints(startBlock int64, valUpgradeBlock int64, endBlockHeight int64, totalScore int64, missedDeductionFactor int64) int64 {
+	var rewards int64 = 0
+
 	if valUpgradeBlock == 0 {
-		return 0
+		return rewards
 	}
 
 	if valUpgradeBlock == startBlock {
-		return totalScore
+		rewards = totalScore
 	} else if (endBlockHeight - valUpgradeBlock) > 0 {
-		return totalScore - ((valUpgradeBlock - startBlock) * missedDeductionFactor) // each missed block costs 1 point deduction
+		rewards = totalScore - ((valUpgradeBlock - startBlock) * missedDeductionFactor) // each missed block costs 1 point deduction
 	}
 
-	return 0
+	fmt.Println(missedDeductionFactor, valUpgradeBlock, rewards)
+
+	return rewards
 }
 
 func GetCommonValidators(gentxVals, blockVals []string) (results []string) {
