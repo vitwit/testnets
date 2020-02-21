@@ -393,8 +393,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	//Printing Uptime results in tabular view
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 0, ' ', tabwriter.Debug)
-	fmt.Fprintln(w, " Operator Addr \t Moniker\t Uptime Count "+
-		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points \t Uptime Points "+
+	fmt.Fprintln(w, " Operator Addr \t Moniker\t Uptime Count \t Uptime Points "+
+		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points "+
 		" \t Proposal-1 Points \t Proposal-2 Points \t Proposal-3 Points \t Proposal-4 Points \t Genesis Points \t Total points")
 
 	for _, data := range validatorsList {
