@@ -13,6 +13,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/vitwit/testnets/util/uptime/db"
 	"gopkg.in/mgo.v2/bson"
+	"net/http"
+	"io/ioutil"
+	"encoding/json"
 )
 
 var (
@@ -43,18 +46,25 @@ func New(db db.DB) handler {
 	return handler{db}
 }
 
-func CalculateProposal1VoteScore(address string) int64 {
-	proposal1Voters := viper.Get("papua_vote_validators").([]interface{})
-
-	for _, obj := range proposal1Voters {
-		if obj.(string) == address {
-			return 50
-		}
-	}
-	return 0
-}
-
 func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_address string) int64 {
+
+	url := "http://103.125.217.44:456/gov/proposals"
+	resp, err := http.Get(url)
+	if err != nil {
+
+	}
+
+	proposalInfo := make([]Proposal, 100, 100)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error while reading resp body ", err)
+	}
+	_ = json.Unmarshal(body, &proposalInfo)
+
+	for i := 0;i< len(proposalInfo);i++{
+		if proposalInfo[i].ProposalID == proposal_id && proposalInfo[i].
+	}
+
 	query := bson.M{
 		"id":          proposal_id,
 		"votes.voter": delegator_address,
@@ -192,39 +202,13 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
-func CalculateUpgrade1Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock-startBlock == 0 {
-		return 150
-	} else if (valUpgradeBlock - startBlock) > 0 {
-		return 150 - ((valUpgradeBlock - startBlock) * -1)
+func CalculateUpgradePoints(startBlock int64, valUpgradeBlock int64, endBlockHeight int64, totalScore int64, missedDeductionFactor int64) int64 {
+	if valUpgradeBlock == startBlock {
+		return totalScore
+	} else if (endBlockHeight - valUpgradeBlock) > 0 {
+		return totalScore - ((valUpgradeBlock - startBlock) * missedDeductionFactor) // each missed block costs 1 point deduction
 	}
-	return 0
-}
 
-func CalculateUpgrade2Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock-startBlock == 0 {
-		return 150
-	} else if (valUpgradeBlock-startBlock) > 0 && (valUpgradeBlock-startBlock) <= 75 {
-		return 150 - ((valUpgradeBlock - startBlock) * -2)
-	}
-	return 0
-}
-
-func CalculateUpgrade3Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock-startBlock == 0 {
-		return 150
-	} else if (valUpgradeBlock-startBlock) > 0 && (valUpgradeBlock-startBlock) <= 50 {
-		return 150 - ((valUpgradeBlock - startBlock) * -3)
-	}
-	return 0
-}
-
-func CalculateUpgrade4Points(startBlock int64, valUpgradeBlock int64, endBlockHeight int64) int64 {
-	if valUpgradeBlock-startBlock == 0 {
-		return 150
-	} else if (valUpgradeBlock-startBlock) > 0 && (valUpgradeBlock-startBlock) <= 30 {
-		return 150 - ((valUpgradeBlock - startBlock) * -5)
-	}
 	return 0
 }
 
@@ -302,22 +286,15 @@ func (h handler) CalculateGenesisPoints(address string) int64 {
 
 }
 
-// Uptime rewards max 200
-func CalculateUptimeRewards(uptime_count int64, start_block int64, end_block int64) float64 {
-
-	total_blocks := end_block - start_block
-	uptimePerc := float64((100 * uptime_count) / total_blocks)
+// CalculateUptimeRewards uptime rewards max 200
+func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64) float64 {
+	totalBlocks := endBlock - startBlock
+	uptimePerc := float64((100 * uptimeCount) / totalBlocks)
 
 	if uptimePerc == 100 {
 		return 200
-	} else if uptimePerc > 90 && uptimePerc < 100 {
-		// have to write
-		value := float64((uptimePerc - 90) / 100)
-		return value
-	} else if uptimePerc == 90 {
-		return 1
-	} else {
-		return 0
+	} else if uptimePerc > 90 {
+		return float64((uptimePerc - 90) * 200)
 	}
 
 	return 0
@@ -329,34 +306,36 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	//nodeRewards = viper.Get("node_rewards").(int64)
 
 	// Read papua upgrade configs
-	papuaStartBlock = viper.Get("papua_startblock").(int64) //Need to consider votes from next block after upgrade
-	papuaEndBlock = viper.Get("papua_endblock").(int64)
+
+	papuaStartBlock = viper.Get("papua_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
+	papuaEndBlock = viper.Get("papua_endblock").(int64) + 1
 	//papuaPointsPerBlock = viper.Get("papua_reward_points_per_block").(int64)
 
 	// Read patagonia upgrade configs
-	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
-	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)
+	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
+	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64) + 1
 	//patagoniaPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	// Read darien-gap upgrade configs
-	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) //Need to consider votes from next block after upgrade
-	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)
+	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
+	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64) + 1
 	//dariengapPointsPerBlock = viper.Get("darien_gap_reward_points_per_block").(int64)
 
 	// Read andes upgrade configs
-	andesStartBlock = viper.Get("andes_startblock").(int64) //Need to consider votes from next block after upgrade
-	andesEndBlock = viper.Get("andes_endblock").(int64)
+	andesStartBlock = viper.Get("andes_startblock").(int64) + 1 //Need to consider votes from next block after upgrade
+	andesEndBlock = viper.Get("andes_endblock").(int64) + 1
+
 	//andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	var validatorsList []ValidatorInfo //Intializing validators uptime
 
 	fmt.Println("Fetching blocks from:", startBlock, ", to:", endBlock)
 
-	upgrade1_aggQuery := GenerateAggregateQuery(startBlock, endBlock, papuaStartBlock,
+	upgrade1AggQuery := GenerateAggregateQuery(startBlock, endBlock, papuaStartBlock,
 		papuaEndBlock, patagoniaStartBlock, patagoniaEndBlock, dariengapStartBlock, dariengapEndBlock,
 		andesStartBlock, andesEndBlock)
 
-	results, err := h.db.QueryValAggregateData(upgrade1_aggQuery)
+	results, err := h.db.QueryValAggregateData(upgrade1AggQuery)
 	if err != nil {
 		golog.Error("Error while fetching the data..", err)
 	}
@@ -368,9 +347,9 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	for _, obj := range results {
 
-		var special_bonus int64 = 0
+		var specialBonus int64 = 0
 		if obj.Validator_details[0].Operator_address == viper.Get("special_bonus_address").(string) {
-			special_bonus = 100
+			specialBonus = 100
 		}
 
 		valInfo := ValidatorInfo{
@@ -379,10 +358,10 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 				OperatorAddr:     obj.Validator_details[0].Operator_address,
 				Moniker:          obj.Validator_details[0].Description.Moniker,
 				UptimeCount:      obj.Uptime_count,
-				Upgrade1Points:   CalculateUpgrade1Points(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock),
-				Upgrade2Points:   CalculateUpgrade2Points(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock),
-				Upgrade3Points:   CalculateUpgrade3Points(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock) + special_bonus,
-				Upgrade4Points:   CalculateUpgrade4Points(andesStartBlock, obj.Upgrade4_block, andesEndBlock),
+				Upgrade1Points:   CalculateUpgradePoints(papuaStartBlock, obj.Upgrade1_block, papuaEndBlock, 150, 1),
+				Upgrade2Points:   CalculateUpgradePoints(patagoniaStartBlock, obj.Upgrade2_block, patagoniaEndBlock, 150, 2),
+				Upgrade3Points:   CalculateUpgradePoints(dariengapStartBlock, obj.Upgrade3_block, dariengapEndBlock, 150, 3) + specialBonus,
+				Upgrade4Points:   CalculateUpgradePoints(andesStartBlock, obj.Upgrade4_block, andesEndBlock, 150, 5),
 				UptimePoints:     CalculateUptimeRewards(obj.Uptime_count, startBlock, endBlock),
 				DelegatorAddress: obj.Validator_details[0].Delegator_address,
 			},
