@@ -1,4 +1,4 @@
-module uptime
+module github.com/vitwit/testnets/util/uptime
 
 go 1.13
 
