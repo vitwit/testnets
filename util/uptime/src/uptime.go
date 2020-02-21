@@ -182,6 +182,10 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
 func CalculateUpgradePoints(startBlock int64, valUpgradeBlock int64, endBlockHeight int64, totalScore int64, missedDeductionFactor int64) int64 {
+	if valUpgradeBlock == 0 {
+		return 0
+	}
+
 	if valUpgradeBlock == startBlock {
 		return totalScore
 	} else if (endBlockHeight - valUpgradeBlock) > 0 {
