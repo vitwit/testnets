@@ -9,10 +9,10 @@ import (
 
 	"text/tabwriter"
 
+	"github.com/kataras/golog"
 	"github.com/spf13/viper"
 	"github.com/vitwit/testnets/util/uptime/db"
 	"gopkg.in/mgo.v2/bson"
-	"github.com/kataras/golog"
 )
 
 var (
@@ -56,13 +56,13 @@ func CalculateProposal1VoteScore(address string) int64 {
 
 func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_address string) int64 {
 	query := bson.M{
-		"proposal_id": proposal_id,
-		"voter":       delegator_address,
+		"id":          proposal_id,
+		"votes.voter": delegator_address,
 	}
 
 	proposal, _ := h.db.QueryProposalDetails(query)
 
-	if proposal.Voter != "" {
+	if proposal.ID != "" {
 		return 50
 	}
 
@@ -177,7 +177,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 				},
 				bson.M{
 					"$project": bson.M{
-						"description.moniker": 1, "operator_address": 1,"delegator_address":1, "address": 1, "_id": 0,
+						"description.moniker": 1, "operator_address": 1, "delegator_address": 1, "address": 1, "_id": 0,
 					},
 				},
 			},
@@ -329,23 +329,23 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 	//nodeRewards = viper.Get("node_rewards").(int64)
 
 	// Read papua upgrade configs
-	papuaStartBlock = viper.Get("papua_startblock").(int64)+1 //Need to consider votes from next block after upgrade
-	papuaEndBlock = viper.Get("papua_endblock").(int64)+1
+	papuaStartBlock = viper.Get("papua_startblock").(int64) //Need to consider votes from next block after upgrade
+	papuaEndBlock = viper.Get("papua_endblock").(int64)
 	//papuaPointsPerBlock = viper.Get("papua_reward_points_per_block").(int64)
 
 	// Read patagonia upgrade configs
-	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64)+1 //Need to consider votes from next block after upgrade
-	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)+1
+	patagoniaStartBlock = viper.Get("patagonia_startblock").(int64) //Need to consider votes from next block after upgrade
+	patagoniaEndBlock = viper.Get("patagonia_endblock").(int64)
 	//patagoniaPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	// Read darien-gap upgrade configs
-	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64)+1 //Need to consider votes from next block after upgrade
-	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)+1
+	dariengapStartBlock = viper.Get("darien_gap_startblock").(int64) //Need to consider votes from next block after upgrade
+	dariengapEndBlock = viper.Get("darien_gap_endblock").(int64)
 	//dariengapPointsPerBlock = viper.Get("darien_gap_reward_points_per_block").(int64)
 
 	// Read andes upgrade configs
-	andesStartBlock = viper.Get("andes_startblock").(int64)+1 //Need to consider votes from next block after upgrade
-	andesEndBlock = viper.Get("andes_endblock").(int64)+1
+	andesStartBlock = viper.Get("andes_startblock").(int64) //Need to consider votes from next block after upgrade
+	andesEndBlock = viper.Get("andes_endblock").(int64)
 	//andesPointsPerBlock = viper.Get("patagonia_reward_points_per_block").(int64)
 
 	var validatorsList []ValidatorInfo //Intializing validators uptime
@@ -408,8 +408,10 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 		//calculate proposal2 vote score
 		proposal2VoteScore := h.CalculateProposalsVoteScore(proposal2, validatorsList[i].Info.DelegatorAddress)
 
+		//calculate proposal3 vote score
 		proposal3VoteScore := h.CalculateProposalsVoteScore(proposal3, validatorsList[i].Info.DelegatorAddress)
 
+		//calculate proposal4 vote score
 		proposal4VoteScore := h.CalculateProposalsVoteScore(proposal4, validatorsList[i].Info.DelegatorAddress)
 
 		validatorsList[i].Info.Proposal1VoteScore = proposal1VoteScore

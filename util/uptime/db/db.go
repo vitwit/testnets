@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"time"
 )
 
 //configuring db name and collections
@@ -47,10 +48,30 @@ type Description struct {
 	Moniker string `json:"moniker" bson:"moniker"`
 }
 
+//type Proposals struct {
+//	Voter       string `json:"voter" bson:"voter"`
+//	Proposal_id string `json:"proposal_id" bson:"proposal_id"`
+//	Option      string `json:"option" bson:"option"`
+//}
+
 type Proposals struct {
-	Voter       string `json:"voter" bson:"voter"`
-	Proposal_id string `json:"proposal_id" bson:"proposal_id"`
-	Option      string `json:"option" bson:"option"`
+	ProposalID      int       `json:"proposalId" bson:"proposalId"`
+	ID              string    `json:"id" bson:"id"`
+	ProposalStatus  string    `json:"proposal_status" bson:"proposal_status"`
+	Proposer        string    `json:"proposer" bson:"proposer"`
+	SubmitTime      time.Time `json:"submit_time" bson:"submit_time"`
+	VotingEndTime   time.Time `json:"voting_end_time" bson:"voting_end_time"`
+	VotingStartTime time.Time `json:"voting_start_time" bson:"voting_start_time"`
+	UpdatedAt       string    `json:"updatedAt" bson:"updatedAt"`
+	Votes           []struct {
+		Voter       string `json:"voter" bson:"voter"`
+		ProposalID  string `json:"proposal_id" bson:"proposal_id"`
+		Option      string `json:"option" bson:"option"`
+		VotingPower int    `json:"votingPower" bson:"votingPower"`
+	} `json:"votes" bson:"votes"`
+	Value struct {
+		ProposalStatus string `json:"proposal_status" bson:"proposal_status"`
+	} `json:"value" bson:"value"`
 }
 
 // Connect returns a pointer to a MongoDB instance,
