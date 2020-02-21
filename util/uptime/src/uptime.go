@@ -9,13 +9,13 @@ import (
 
 	"text/tabwriter"
 
+	"encoding/json"
 	"github.com/kataras/golog"
 	"github.com/spf13/viper"
 	"github.com/vitwit/testnets/util/uptime/db"
 	"gopkg.in/mgo.v2/bson"
-	"net/http"
 	"io/ioutil"
-	"encoding/json"
+	"net/http"
 )
 
 var (
@@ -48,41 +48,32 @@ func New(db db.DB) handler {
 
 func (h *handler) CalculateProposalsVoteScore(proposal_id string, delegator_address string) int64 {
 
-	url := "http://103.125.217.44:456/gov/proposals"
+	url := viper.Get("lcd").(string) + proposal_id + "/votes"
 	resp, err := http.Get(url)
 	if err != nil {
 
 	}
 
-	proposalInfo := make([]Proposal, 100, 100)
+	var proposalInfo Proposal
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error while reading resp body ", err)
 	}
 	_ = json.Unmarshal(body, &proposalInfo)
 
-	for i := 0;i< len(proposalInfo);i++{
-		if proposalInfo[i].ProposalID == proposal_id && proposalInfo[i].
+	for i := 0; i < len(proposalInfo); i++ {
+		if proposalInfo[i].Voter == delegator_address {
+			return 50
+		}
 	}
-
-	query := bson.M{
-		"id":          proposal_id,
-		"votes.voter": delegator_address,
-	}
-
-	proposal, _ := h.db.QueryProposalDetails(query)
-
-	if proposal.ID != "" {
-		return 50
-	}
-
 	return 0
 }
 
 func GenerateAggregateQuery(startBlock int64, endBlock int64,
-	papuaStartBlock int64, papuaEndBlock int64, patagoniaStartBlock int64, patagoniaEndBlock int64,
-	dariengapStartBlock int64, dariengapEndBlock int64, andesStartBlock int64, andesEndBlock int64) []bson.M {
-
+	patagoniaStartBlock int64, patagoniaEndBlock int64,
+	papuaStartBlock int64, papuaEndBlock int64,
+	dariengapStartBlock int64, dariengapEndBlock int64,
+	andesStartBlock int64, andesEndBlock int64) []bson.M {
 	aggQuery := []bson.M{}
 
 	//Query for filtering blocks in between given start block and end block
@@ -118,8 +109,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
-								bson.M{"$gte": []interface{}{"$height", papuaStartBlock}},
-								bson.M{"$lte": []interface{}{"$height", papuaEndBlock}},
+								bson.M{"$gte": []interface{}{"$height", patagoniaStartBlock}},
+								bson.M{"$lte": []interface{}{"$height", patagoniaEndBlock}},
 							},
 						},
 						"$height",
@@ -132,8 +123,8 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 					"$cond": []interface{}{
 						bson.M{
 							"$and": []bson.M{
-								bson.M{"$gte": []interface{}{"$height", patagoniaStartBlock}},
-								bson.M{"$lte": []interface{}{"$height", patagoniaEndBlock}},
+								bson.M{"$gte": []interface{}{"$height", papuaStartBlock}},
+								bson.M{"$lte": []interface{}{"$height", papuaEndBlock}},
 							},
 						},
 						"$height",
@@ -197,12 +188,18 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 
 	aggQuery = append(aggQuery, lookUpQuery)
 
+	fmt.Println("query:", aggQuery)
+
 	return aggQuery
 }
 
 // CalculateUpgradePoints - Calculates upgrade points by using upgrade points per block,
 // upgrade block and end block height
 func CalculateUpgradePoints(startBlock int64, valUpgradeBlock int64, endBlockHeight int64, totalScore int64, missedDeductionFactor int64) int64 {
+	if valUpgradeBlock == 0 {
+		return 0
+	}
+
 	if valUpgradeBlock == startBlock {
 		return totalScore
 	} else if (endBlockHeight - valUpgradeBlock) > 0 {
@@ -289,12 +286,15 @@ func (h handler) CalculateGenesisPoints(address string) int64 {
 // CalculateUptimeRewards uptime rewards max 200
 func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64) float64 {
 	totalBlocks := endBlock - startBlock
-	uptimePerc := float64((100 * uptimeCount) / totalBlocks)
 
-	if uptimePerc == 100 {
-		return 200
-	} else if uptimePerc > 90 {
-		return float64((uptimePerc - 90) * 200)
+	if uptimeCount > totalBlocks {
+		return -1
+	}
+
+	uptimePerc := float64(uptimeCount) / float64(totalBlocks) * 100
+
+	if uptimePerc > 90 {
+		return float64((uptimePerc-90)*10*200) / 100
 	}
 
 	return 0
@@ -331,8 +331,10 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	fmt.Println("Fetching blocks from:", startBlock, ", to:", endBlock)
 
-	upgrade1AggQuery := GenerateAggregateQuery(startBlock, endBlock, papuaStartBlock,
-		papuaEndBlock, patagoniaStartBlock, patagoniaEndBlock, dariengapStartBlock, dariengapEndBlock,
+	upgrade1AggQuery := GenerateAggregateQuery(startBlock, endBlock,
+		patagoniaStartBlock, patagoniaEndBlock,
+		papuaStartBlock, papuaEndBlock,
+		dariengapStartBlock, dariengapEndBlock,
 		andesStartBlock, andesEndBlock)
 
 	results, err := h.db.QueryValAggregateData(upgrade1AggQuery)
@@ -411,8 +413,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 
 	//Printing Uptime results in tabular view
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 0, ' ', tabwriter.Debug)
-	fmt.Fprintln(w, " Operator Addr \t Moniker\t Uptime Count "+
-		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points \t Uptime Points "+
+	fmt.Fprintln(w, " Operator Addr \t Moniker\t Uptime Count \t Uptime Points "+
+		"\t Upgrade-1 Points \t Upgrade-2 Points \t Upgrade-3 Points \t Upgrade-4 Points "+
 		" \t Proposal-1 Points \t Proposal-2 Points \t Proposal-3 Points \t Proposal-4 Points \t Genesis Points \t Total points")
 
 	for _, data := range validatorsList {
@@ -441,8 +443,8 @@ func (h handler) CalculateUptime(startBlock int64, endBlock int64) {
 // ExportToCsv - Export data to CSV file
 func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 	Header := []string{
-		"ValOper Address", "Moniker", "Uptime Count", "Upgrade1 Points",
-		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points", "Uptime Points",
+		"ValOper Address", "Moniker", "Uptime Count", "Uptime Points", "Upgrade1 Points",
+		"Upgrade2 Points", "Upgrade3 Points", "Upgrade4 Points",
 		"Proposal1 Vote Points", "Proposal2 Vote Points", "Proposal3 Vote Points", "Proposal4 Vote Points",
 		"Genesis Points", "Total Points",
 	}
@@ -482,8 +484,8 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		p3VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
 		p4VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
 		genPoints := strconv.Itoa(int(record.Info.GenesisPoints))
-		addrObj := []string{address, record.Info.Moniker, uptimeCount, up1Points,
-			up2Points, up3Points, up4Points, uptimePoints, p1VoteScore, p2VoteScore, p3VoteScore,
+		addrObj := []string{address, record.Info.Moniker, uptimeCount, uptimePoints, up1Points,
+			up2Points, up3Points, up4Points, p1VoteScore, p2VoteScore, p3VoteScore,
 			p4VoteScore, genPoints, totalPoints}
 		err := writer.Write(addrObj)
 

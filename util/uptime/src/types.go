@@ -1,7 +1,5 @@
 package src
 
-import "time"
-
 type Validator struct {
 	ValidatorInfo []ValidatorInfo `json:"validatorInfo"`
 }
@@ -30,32 +28,8 @@ type Info struct {
 	DelegatorAddress   string  `json:"delegator_address"`
 }
 
-type Proposal struct {
-	ProposalContent struct {
-		Type  string `json:"type"`
-		Value struct {
-			Title       string `json:"title"`
-			Description string `json:"description"`
-			Plan        struct {
-				Name string    `json:"name"`
-				Time time.Time `json:"time"`
-			} `json:"plan"`
-		} `json:"value"`
-	} `json:"content"`
-	ProposalID       string `json:"id"`
-	ProposalStatus   string `json:"proposal_status"`
-	FinalTallyResult struct {
-		Yes        string `json:"yes"`
-		Abstain    string `json:"abstain"`
-		No         string `json:"no"`
-		NoWithVeto string `json:"no_with_veto"`
-	} `json:"final_tally_result"`
-	SubmitTime     time.Time `json:"submit_time"`
-	DepositEndTime time.Time `json:"deposit_end_time"`
-	TotalDeposit   struct {
-		Denom  string `json:"denom"`
-		Amount string `json:"amount"`
-	} `json:"total_deposit"`
-	VotingStartTime time.Time `json:"voting_start_time"`
-	VotingEndTime   time.Time `json:"voting_end_time"`
+type Proposal []struct {
+	Voter      string `json:"voter"`
+	ProposalID string `json:"proposal_id"`
+	Option     string `json:"option"`
 }
