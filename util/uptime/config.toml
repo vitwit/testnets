@@ -1,2 +1,29 @@
+mongo_uri = "localhost:27017"
+database = ""
+username = ""
+password = ""
+source = ""
+failFast = true
 
-mongo_uri = "mongo_db_connection_uri"
+# Papua upgrade config
+papua_startblock = 32193
+papua_endblock = 32343
+
+# Patagonia upgrade config
+patagonia_startblock = 90676
+patagonia_endblock = 90751
+
+# Darien_gap_startblock
+darien_gap_startblock = 214395
+darien_gap_endblock = 214445
+
+# Andes
+andes_startblock = 218541
+andes_endblock = 218571
+
+# special_bonus_address
+special_bonus_address = "xrn:valoper10l9t2lvxhxut2s60lwct8f6n2q5x88kh04442w"
+proposal_1_id  = "2"
+proposal_2_id = "4"
+proposal_3_id = "5"
+proposal_4_id = "6"
