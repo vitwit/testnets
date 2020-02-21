@@ -280,7 +280,7 @@ func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64)
 	uptimePerc := float64(uptimeCount) / float64(totalBlocks) * 100
 
 	if uptimePerc > 90 {
-		return float64((uptimePerc - 90) * 200)/100
+		return float64((uptimePerc - 90) * 10 * 200)/100
 	}
 
 	return 0
