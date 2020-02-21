@@ -177,7 +177,7 @@ func GenerateAggregateQuery(startBlock int64, endBlock int64,
 
 	aggQuery = append(aggQuery, lookUpQuery)
 
-	fmt.Println("query:", quaggQuery)
+	fmt.Println("query:", aggQuery)
 
 	return aggQuery
 }
