@@ -300,7 +300,9 @@ func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64)
 	uptimePerc := float64(uptimeCount) / float64(totalBlocks) * 100
 
 	if uptimePerc > 90 {
-		return float64((uptimePerc-90)*10*200) / 100
+		rewards := (uptimePerc-90)*20 // each percentage of uptime carries 20 points
+		fmt.Println("uptime rewards: ", uptimePerc, rewards)
+		return rewards
 	}
 
 	return 0
