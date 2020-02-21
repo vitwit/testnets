@@ -190,6 +190,7 @@ func CalculateUpgradePoints(startBlock int64, valUpgradeBlock int64, endBlockHei
 	var rewards int64 = 0
 
 	if valUpgradeBlock == 0 {
+		fmt.Println("valUpgradeBlock-----": valUpgradeBlock, missedDeductionFactor)
 		return rewards
 	}
 
