@@ -272,12 +272,15 @@ func (h handler) CalculateGenesisPoints(address string) int64 {
 // CalculateUptimeRewards uptime rewards max 200
 func CalculateUptimeRewards(uptimeCount int64, startBlock int64, endBlock int64) float64 {
 	totalBlocks := endBlock - startBlock
-	uptimePerc := float64((100 * uptimeCount) / totalBlocks)
 
-	if uptimePerc == 100 {
-		return 200
-	} else if uptimePerc > 90 {
-		return float64((uptimePerc - 90) * 200)
+	if uptimeCount > totalBlocks {
+		return -1
+	}
+
+	uptimePerc := float64(uptimeCount) / float64(totalBlocks) * 100
+
+	if uptimePerc > 90 {
+		return float64((uptimePerc - 90) * 200)/100
 	}
 
 	return 0
