@@ -489,8 +489,8 @@ func ExportToCsv(data []ValidatorInfo, nodeRewards int64) {
 		totalPoints := fmt.Sprintf("%f", record.Info.TotalPoints)
 		p1VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
 		p2VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
-		p3VoteScore := strconv.Itoa(int(record.Info.Proposal1VoteScore))
-		p4VoteScore := strconv.Itoa(int(record.Info.Proposal2VoteScore))
+		p3VoteScore := strconv.Itoa(int(record.Info.Proposal3VoteScore))
+		p4VoteScore := strconv.Itoa(int(record.Info.Proposal4VoteScore))
 		genPoints := strconv.Itoa(int(record.Info.GenesisPoints))
 		addrObj := []string{address, record.Info.Moniker, uptimeCount, uptimePoints, up1Points,
 			up2Points, up3Points, up4Points, p1VoteScore, p2VoteScore, p3VoteScore,
