@@ -2,24 +2,50 @@
 
 Testnets for [Regen Ledger](https://github.com/regen-network/regen-ledger)
 
-## Join `regen-test-1001` Public Testnet
 
-`regen-test-1001` is now live!
 
-We have a working fork of [Lunie](https://github.com/luniehq/lunie) at https://lunie.regen.network
+## Join `algradigon-1` Incentivised Testnet
+
+`algradigon-1` is the second phase of the Regen Network Incentivised testnet programme. It is due to have it's genesis block set in stone on Thursday January 23rd at 1700 UTC (1200EST and 0900PST; 24/01 at 0200KST). Future upgrades will be staggered so all validators get 'good' upgrade windows and 'bad' upgrade windows!
+
+We will have a working fork of [Lunie](https://github.com/luniehq/lunie) at https://lunie.regen.network
 and a fork of [Big Dipper](https://github.com/forbole/big_dipper) at at https://bigdipper.regen.network/
 
-The genesis files are in [./latest](latest) and the incentive point system in [./regen-test-1001/README.md](./regen-test-1001/README.md)
+The genesis files are in [./latest](latest). This is an incentivised testnet, and further details can be found on the Regen blog: [algradigon regens testnet](https://medium.com/regen-network/algradigon-regens-testnet-2000-4ea377c4a590)
 
-We have airdropped testnet tokens to all participants in the last Cosmos Hub
-testnet. If you would like to participate and have not received tokens, you
-can get some from this faucet: http://regen.coris.network/faucet,
-ask in our validator telegram channel: https://t.me/joinchat/FJGNSxOpjJcgrUGwAAOKUg
-or open an issue with an address and we'll send you some.
+Gentx submissions must be included in a PR to this repo *by 22nd Jan at 1200UTC*. The genesis file will be released by 1800UTC on 22nd Jan - 23 hours before genesis.
 
 For those wanting to develop against the Regen test network APIs, please use the following highly available service provided by [Chorus One](https://chorus.one):
 * **RPC**: https://regen.chorus.one:26657
 * **LCD**: https://regen-lcd.chorus.one:1317
+
+## Creating a Genesis Validator
+
+*This section applies ONLY if you are wishing to validate from the genesis block. This process will close at 1200UTC on 22nd January 2020*
+
+#### Generate Genesis Transaction (optional)
+```
+$ curl -s https://raw.githubusercontent.com/regen-network/testnets/master/algradigon-1/genesis.json > ~/.xrnd/config/genesis.json
+$ xrnd add-genesis-account $(xrncli keys show <your_wallet_name> -a) 10000000utree   # other values will be removed.
+$ xrnd gentx --name <your_wallet_name> --amount 9000000utree
+```
+If all goes well, you will see the following message:
+```
+Genesis transaction written to "/home/user/.xrnd/config/gentx/gentx-f8038a89034kl987ebd493b85a125624d5f4770.json"
+```
+#### Submit Gentx (optional)
+Submit your gentx in a PR [here](https://github.com/regen-network/testnets)
+
+- Clone the repo using
+
+```sh
+git clone https://github.com/regen-network/testnets
+```
+
+- Copy the generated gentx json file to <repo_path>/algradigon-1/gentxs/<your_gentx_file.json>
+
+- Commit and push to your repo
+- Create a PR into https://github.com/regen-network/testnets
 
 ## How to Run a Testnet Validator
 
@@ -29,6 +55,7 @@ Please refer to the Cosmos Hub documentation on validators for a general overvie
 * [Validators Overview](https://cosmos.network/docs/cosmos-hub/validators/overview.html)
 * [Validator Security](https://cosmos.network/docs/cosmos-hub/validators/security.html)
 * [Validator FAQ](https://cosmos.network/docs/cosmos-hub/validators/validator-faq.html)
+
 
 ### Prerequisites
 ```
@@ -40,12 +67,12 @@ $ wget https://raw.githubusercontent.com/jim380/node_tooling/master/Cosmos/CLI/g
 $ chmod +x go_install.sh
 $ ./go_install.sh -v 1.12.5
 ```
-At the time of this writing, `1.12.5` is the latest version of Golang. **Go 1.12+ is required for the Cosmos SDK.**
+**Go 1.12+ is required.**
 ### Install XRN
 ```
 $ mkdir -p $GOPATH/src/github.com/regen
 $ cd $GOPATH/src/github.com/regen
-$ git clone -b <latest-release-tag> https://github.com/regen-network/regen-ledger
+$ git clone -b v0.5.0 https://github.com/regen-network/regen-ledger
 $ cd regen-ledger
 $ make install
 ```
@@ -56,7 +83,7 @@ $ xrncli version --long
 ```
 ### Setting Up a New Node
 ```
-$ xrnd init --chain-id=regen-test-1001 <your_moniker>
+$ xrnd init --chain-id=algradigon-1 <your_moniker>
 $ xrncli keys add <your_wallet_name>
 
 ##
@@ -71,7 +98,7 @@ Please follow the documentation provided on [creating a validator for Cosmos hub
 ### Genesis & Seeds
 Fetch `genesis.json` into `xrnd`'s `config` directory.
 ```
-$ curl https://raw.githubusercontent.com/regen-network/testnets/master/regen-test-1001/genesis.json > $HOME/.xrnd/config/genesis.json
+$ curl https://raw.githubusercontent.com/regen-network/testnets/master/algradigon-1/genesis.json > $HOME/.xrnd/config/genesis.json
 ```
 Add seed nodes in `config.toml`.
 ```
@@ -128,25 +155,17 @@ Check node status
 $ xrncli status
 ```
 
-### Creating a Genesis Validator
-
-*This section applies ONLY if you are joining at genesis! Genesis for Regen Test-1001 was in June 2019.*
-#### Generate Genesis Transaction (optional)
-```
-$ xrnd add-genesis-account $(xrncli keys show <your_wallet_name> -a) 1000000tree,1000000validatortoken
-$ xrnd gentx --name <your_wallet_name> --amount 1000000tree
-```
-If all goes well, you will see the following message:
-```
-Genesis transaction written to "/home/user/.xrnd/config/gentx/gentx-f8038a89034kl987ebd493b85a125624d5f4770.json"
-```
-#### Submit Gentx (optional)
-Submit your gentx in a PR [here](https://github.com/regen-network/testnets) 
-
-
 # Historic Testnets (not in use)
 
 The testnets listed below are no longer active but are retained here for posterity. Do not waste your time trying to join them :)
+
+## `congo-1` 
+
+`congo-1` was the first community-driven testnet between 7th November 2019 and 17th January 2020, at which point it was abandoned in order to prepare for the next incentivised testnet.
+
+## `regen-test-1001`
+
+`regen-test-1001` ran between August and October 2019. It is now defunct, having discovered a cosmos-sdk bug in governance-driven parameter updates logic.
 
 ## `regen-test-1000` 
 
