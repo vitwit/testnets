@@ -17,24 +17,24 @@
 2. Give away (ERC20) tokens to 5 validators
 3. Special bonus for adding allowance (it's a bonus, go get it mode)
 
-### Phase - 3: Ameliorate network (**High-noon upgrade**) 20th March, 1200UTC
-1. Upgrade proposal : 17th March, 1200 UTC
-2. Binary release - 17th March, 1800 UTC
-3. Voting Period : 17th - 19th
-4. Upgrade time: 20th March, 1200UTC
+### Phase - 3: Ameliorate network (**High-noon upgrade**) 25th March, 1200UTC
+1. Upgrade proposal : 23rd March, 1200 UTC
+2. Binary release - 23rd March, 1800 UTC
+3. Voting Period : 23rd - 25th
+4. Upgrade time: 25th March, 1200UTC
 
 ### Phase - 3.1: Skip upgrade (**twilight drama**) - 27th March, 1600UTC
 There might be a case where the upgrade binaries will be available only after the proposal is Passed. What if something is wrong with the new binary? Skipping the upgrade is a best way to handle such cases.
-1. Upgrade proposal : 23rd March, 1200 UTC
-2. Binary release - 26th March, 1600 UTC
-3. Voting Period : 23rd - 25th, March
-4. Upgrade time: 27th March, 1600UTC 
+1. Upgrade proposal : 30th March, 1200 UTC
+2. Binary release - 30th March, 1600 UTC
+3. Voting Period : 30th - 31st, March
+4. Upgrade time: 31st, 1600UTC 
 
-### Phase - 4: Deploy contract - 2 (Escrow contract) - 2nd Apr, 2100UTC
+### Phase - 4: Deploy contract - 2 (Escrow contract) - 5th Apr, 2100UTC
 1. Deploy escrow contract
 2. Execute escrow
 
-### Phase - 5: High skill time - 6th Apr, 0000UTC - 9th Apr, 2300 UTC (Bonus phase)
+### Phase - 5: High skill time - 9th Apr, 0000UTC - th Apr, 2300 UTC (Bonus phase)
 1. Custom contracts deployment based on a provided criteria
 2. Criteria will be shared on: 3rd March, 0200UTC
 
